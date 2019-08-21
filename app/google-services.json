@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "810074638547",
+    "firebase_url": "https://realtimelocationtracker-250410.firebaseio.com",
+    "project_id": "realtimelocationtracker-250410",
+    "storage_bucket": "realtimelocationtracker-250410.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:810074638547:android:b5a6b4b52a24ceb7",
+        "android_client_info": {
+          "package_name": "com.abid.rttracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "810074638547-8hkctt8e90htstsk4qhd3q5nec4jbpjg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.abid.rttracker",
+            "certificate_hash": "0f47502b2a335646be8c98f740203f34ca62b7cb"
+          }
+        },
+        {
+          "client_id": "810074638547-nks8du3bkj5020c8ho1nj2qjn5o54qo0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDX1PelKvsQroDtArap8XXTiK0hKy61IEE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "810074638547-nks8du3bkj5020c8ho1nj2qjn5o54qo0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
