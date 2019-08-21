@@ -9,13 +9,17 @@ import android.content.Intent;
 import android.location.Address;
 import android.os.Build;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
 import com.abid.rttracker.R;
+import com.abid.rttracker.model.Data;
 import com.google.android.gms.location.LocationRequest;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.patloew.rxlocation.RxLocation;
 
 import io.reactivex.disposables.Disposable;
@@ -27,6 +31,9 @@ public class LocationTrackerService extends Service {
     private static final String TAG_FOREGROUND_SERVICE = "FOREGROUND_SERVICE";
     private static final String CHANNEL_RT_TRACKER = "rt_service_tracker";
     private static Disposable disposable;
+    String unique_id;
+    private DatabaseReference myRef;
+    private FirebaseDatabase database;
     private RxLocation rxLocation;
     private LocationRequest locationRequest;
     private CharSequence textTitle = "Location";
@@ -35,8 +42,12 @@ public class LocationTrackerService extends Service {
     public LocationTrackerService() {
     }
 
-    private static void accept(Address address) {
-        Log.e("Location", address.getAdminArea() + " " + address.getLatitude());
+    private static void error(Throwable throwable) {
+        //handle error
+    }
+
+    private void accept(Address address) {
+
     }
 
     @Override
@@ -47,6 +58,12 @@ public class LocationTrackerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        database = FirebaseDatabase.getInstance();
+        myRef = database.getReference("devices");
+
+        unique_id = Settings.Secure.getString(getApplicationContext()
+                .getContentResolver(), Settings.Secure.ANDROID_ID);
+
         rxLocation = new RxLocation(this);
         locationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -78,15 +95,17 @@ public class LocationTrackerService extends Service {
 
         disposable = rxLocation.location().updates(locationRequest)
                 .flatMap(location -> rxLocation.geocoding().fromLocation(location).toObservable())
-                .subscribe(LocationTrackerService::accept,LocationTrackerService::error);
+                .subscribe(address -> {
+                    Log.e("Location", address.getAdminArea() + " " + address.getLatitude());
+                    myRef.child(unique_id).setValue(new Data("Abid",
+                                    unique_id,
+                                    address.getLatitude(),
+                                    address.getLongitude(),
+                                    System.currentTimeMillis()));
+                }, LocationTrackerService::error);
         // Start foreground service.
         startForeground(1, notification);
     }
-
-    private static void error(Throwable throwable) {
-        //handle error
-    }
-
 
     @Override
     public void onDestroy() {

@@ -1,36 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorSkyBlue"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".MainActivity">
+
+    <ImageButton
+        android:layout_margin="16dp"
+        android:id="@+id/ibUserButton"
+        android:layout_alignParentEnd="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <com.airbnb.lottie.LottieAnimationView
         android:id="@+id/lavAnimation"
-        android:layout_centerInParent="true"
-        android:layout_above="@id/btnStartStop"
-        app:lottie_fileName="world_locations.json"
         android:layout_width="match_parent"
-        app:lottie_loop="true"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_below="@id/ibUserButton"
+        android:layout_above="@id/btnStartStop"
+        android:layout_centerInParent="true"
+        app:lottie_fileName="world_locations.json"
+        app:lottie_loop="true" />
     <TextView
         android:id="@+id/btnStartStop"
-        android:gravity="center"
-        android:text="@string/start"
-        android:textSize="18sp"
-        android:clickable="true"
-        android:focusable="true"
-        android:textStyle="bold"
-        android:textColor="@color/colorWhite"
-        android:fontFamily="serif-monospace"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
         android:layout_alignParentBottom="true"
         android:layout_centerInParent="true"
         android:layout_margin="16dp"
         android:background="@drawable/button_background_primary"
-        style="@style/Widget.AppCompat.Button.Borderless"
-        android:layout_width="100dp"
-        android:layout_height="100dp" />
-
+        android:clickable="true"
+        android:focusable="true"
+        android:fontFamily="serif-monospace"
+        android:gravity="center"
+        android:text="@string/start"
+        android:textColor="@color/colorWhite"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 </RelativeLayout>
