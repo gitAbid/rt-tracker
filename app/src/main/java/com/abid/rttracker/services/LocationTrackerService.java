@@ -73,7 +73,7 @@ public class LocationTrackerService extends Service {
         rxLocation = new RxLocation(this);
         locationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
-                .setInterval(2000);
+                .setInterval(500);
     }
 
     @Override
