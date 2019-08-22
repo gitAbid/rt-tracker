@@ -12,8 +12,6 @@ import android.location.Address;
 import android.os.Build;
 import android.os.IBinder;
 import android.provider.Settings;
-import android.util.Log;
-import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
@@ -28,10 +26,9 @@ import com.patloew.rxlocation.RxLocation;
 import io.reactivex.disposables.Disposable;
 
 public class LocationTrackerService extends Service {
-    private static final String TAG_FOREGROUND_SERVICE = "FOREGROUND_SERVICE";
     private static final String CHANNEL_RT_TRACKER = "rt_service_tracker";
     private static Disposable disposable;
-    String unique_id;
+    private String unique_id, user_id, user_name;
     private SharedPreferences pref;
     private DatabaseReference myRef;
     private FirebaseDatabase database;
@@ -65,23 +62,24 @@ public class LocationTrackerService extends Service {
         unique_id = Settings.Secure.getString(getApplicationContext()
                 .getContentResolver(), Settings.Secure.ANDROID_ID);
         pref = getSharedPreferences(Constants.DB, Context.MODE_PRIVATE);
-        pref.getString("keyname", null);
-        pref.getInt("keyname", 0);
-        pref.getFloat("keyname", 0);
-        pref.getBoolean("keyname", true);
-        pref.getLong("keyname", 0);
+
+        user_name = pref.getString(Constants.USER_NAME, "N/A");
+        user_id = pref.getString(Constants.USER_ID, "N/A");
+        pref.registerOnSharedPreferenceChangeListener((sharedPreferences, key) -> {
+            user_name = pref.getString(Constants.USER_NAME, "N/A");
+            user_id = pref.getString(Constants.USER_ID, "N/A");
+        });
+
         rxLocation = new RxLocation(this);
         locationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(100);
-        Log.d(TAG_FOREGROUND_SERVICE, "My foreground service onCreate().");
+                .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY)
+                .setInterval(2000);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
             startForegroundService();
-            Toast.makeText(getApplicationContext(), "Foreground service is started.", Toast.LENGTH_LONG).show();
         }
         return super.onStartCommand(intent, flags, startId);
     }
@@ -89,7 +87,6 @@ public class LocationTrackerService extends Service {
     /* Used to build and start foreground service. */
     @SuppressLint("MissingPermission")
     private void startForegroundService() {
-        Log.d(TAG_FOREGROUND_SERVICE, "Start foreground service.");
         createNotificationChannel();
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_RT_TRACKER)
                 .setSmallIcon(R.drawable.googleg_standard_color_18)
@@ -100,16 +97,14 @@ public class LocationTrackerService extends Service {
                 .build();
 
         disposable = rxLocation.location().updates(locationRequest)
-                .flatMap(location -> rxLocation.geocoding().fromLocation(location).toObservable())
                 .subscribe(address -> {
-                    Log.e("Location", address.getAdminArea() + " " + address.getLatitude());
-                    myRef.child(unique_id).setValue(new Data(pref.getString(Constants.USER_NAME, "N/A"),
+                    myRef.child(unique_id).setValue(new Data(user_name,
                             unique_id,
                             address.getLatitude(),
                             address.getLongitude(),
                             System.currentTimeMillis(),
-                            pref.getString(Constants.USER_ID, "Dummy"),
-                            pref.getBoolean(Constants.ONLINE_STATUS, false)));
+                            user_id,
+                            true));
                 }, LocationTrackerService::error);
         // Start foreground service.
         startForeground(1, notification);
@@ -118,7 +113,6 @@ public class LocationTrackerService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(TAG_FOREGROUND_SERVICE, "Stop foreground service.");
         stopForeground(true);
         if (disposable != null) {
             disposable.dispose();
