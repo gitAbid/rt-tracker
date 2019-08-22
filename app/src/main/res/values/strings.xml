@@ -10,4 +10,7 @@
     <string name="offline">You are offline. Please enable internet connection to continue. After enabling internet please restart the App.</string>
     <string name="offline_title">No Internet</string>
     <string name="ok">OK</string>
+    <string name="user_name">Name</string>
+    <string name="save">Save</string>
+    <string name="credentials">Credentials</string>
 </resources>

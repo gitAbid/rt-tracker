@@ -4,10 +4,9 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
@@ -16,26 +15,59 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.abid.rttracker.services.LocationTrackerService;
-import com.abid.rttracker.utils.NetworkUtil;
 import com.airbnb.lottie.LottieAnimationView;
+import com.google.android.material.textfield.TextInputEditText;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     TextView mStartStop;
+    ImageView ivUserButton;
+    RelativeLayout rl_credentials_container;
+    Button mSave, mCancel;
     LottieAnimationView lottieAnimationView;
+    Animation slide_up, slide_down;
+    boolean isVisible = false;
+    TextInputEditText mUserName, mUserId;
+    SharedPreferences.Editor editor;
+    SharedPreferences sharedPref;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sharedPref = getSharedPreferences(Constants.DB, Context.MODE_PRIVATE);
+
         setContentView(R.layout.activity_main);
         mStartStop = findViewById(R.id.btnStartStop);
         lottieAnimationView = findViewById(R.id.lavAnimation);
-        mStartStop.setOnClickListener(this);
+        rl_credentials_container = findViewById(R.id.rl_credentials_container);
+        ivUserButton = findViewById(R.id.ivUserButton);
+        mSave = findViewById(R.id.btnSave);
+        mCancel = findViewById(R.id.btnCancel);
 
+        mUserName = findViewById(R.id.etName);
+        mUserId = findViewById(R.id.etUserId);
+
+        mStartStop.setOnClickListener(this);
+        ivUserButton.setOnClickListener(this);
+        mCancel.setOnClickListener(this);
+        mSave.setOnClickListener(this);
+        ivUserButton.setOnClickListener(this);
+
+        slide_down = AnimationUtils.loadAnimation(this, R.anim.anim_down);
+        slide_up = AnimationUtils.loadAnimation(this, R.anim.anim_up);
+
+        mUserId.setText(sharedPref.getString(Constants.USER_ID, ""));
+        mUserName.setText(sharedPref.getString(Constants.USER_NAME, ""));
     }
 
 
@@ -66,10 +98,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void updateButtonStatus() {
         if (isMyServiceRunning()) {
+            editor = sharedPref.edit();
+            editor.putBoolean(Constants.ONLINE_STATUS, true);
+            editor.commit();
             lottieAnimationView.playAnimation();
             mStartStop.setText(getString(R.string.stop));
             mStartStop.setBackground(getDrawable(R.drawable.button_background_secondary));
         } else {
+            editor = sharedPref.edit();
+            editor.putBoolean(Constants.ONLINE_STATUS, false);
+            editor.commit();
             lottieAnimationView.setProgress(.5f);
             lottieAnimationView.cancelAnimation();
             mStartStop.setText(getString(R.string.start));
@@ -95,16 +133,79 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-        if (!isMyServiceRunning()) {
-            if (checkLocationService() && enableGPS() && isNetworkAvailable()) {
+        if (view == mStartStop) {
+            if (!isMyServiceRunning()) {
+                if (checkLocationService() && enableGPS() && isNetworkAvailable()) {
+                    Intent intent = new Intent(MainActivity.this, LocationTrackerService.class);
+                    startService(intent);
+                }
+            } else {
                 Intent intent = new Intent(MainActivity.this, LocationTrackerService.class);
-                startService(intent);
+                stopService(intent);
             }
-        } else {
-            Intent intent = new Intent(MainActivity.this, LocationTrackerService.class);
-            stopService(intent);
+            updateButtonStatus();
+        } else if (view == ivUserButton) {
+            if (!isVisible) {
+                slideDownAnimation();
+            }
+        } else if (view == mSave) {
+            String userName, userId;
+            userName = mUserName.getText().toString();
+            userId = mUserId.getText().toString();
+            editor = sharedPref.edit();
+            editor.putString(Constants.USER_NAME, userName);
+            editor.putString(Constants.USER_ID, userId);
+            editor.commit();
+
+            slideUpAnimation();
+        } else if (view == mCancel) {
+            slideUpAnimation();
         }
-        updateButtonStatus();
+    }
+
+    private void slideUpAnimation() {
+        rl_credentials_container.setAnimation(null);
+        rl_credentials_container.setAnimation(slide_up);
+        slide_up.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                rl_credentials_container.setVisibility(View.GONE);
+                isVisible = false;
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        rl_credentials_container.startAnimation(slide_up);
+    }
+
+    private void slideDownAnimation() {
+        rl_credentials_container.setAnimation(slide_down);
+        rl_credentials_container.setVisibility(View.VISIBLE);
+        slide_down.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                isVisible = true;
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        rl_credentials_container.startAnimation(slide_down);
     }
 
     private boolean enableGPS() {

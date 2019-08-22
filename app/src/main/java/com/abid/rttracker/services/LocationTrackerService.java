@@ -5,7 +5,9 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Address;
 import android.os.Build;
 import android.os.IBinder;
@@ -15,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
+import com.abid.rttracker.Constants;
 import com.abid.rttracker.R;
 import com.abid.rttracker.model.Data;
 import com.google.android.gms.location.LocationRequest;
@@ -25,13 +28,11 @@ import com.patloew.rxlocation.RxLocation;
 import io.reactivex.disposables.Disposable;
 
 public class LocationTrackerService extends Service {
-
-    public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
-    public static final String ACTION_STOP_FOREGROUND_SERVICE = "ACTION_STOP_FOREGROUND_SERVICE";
     private static final String TAG_FOREGROUND_SERVICE = "FOREGROUND_SERVICE";
     private static final String CHANNEL_RT_TRACKER = "rt_service_tracker";
     private static Disposable disposable;
     String unique_id;
+    private SharedPreferences pref;
     private DatabaseReference myRef;
     private FirebaseDatabase database;
     private RxLocation rxLocation;
@@ -63,7 +64,12 @@ public class LocationTrackerService extends Service {
 
         unique_id = Settings.Secure.getString(getApplicationContext()
                 .getContentResolver(), Settings.Secure.ANDROID_ID);
-
+        pref = getSharedPreferences(Constants.DB, Context.MODE_PRIVATE);
+        pref.getString("keyname", null);
+        pref.getInt("keyname", 0);
+        pref.getFloat("keyname", 0);
+        pref.getBoolean("keyname", true);
+        pref.getLong("keyname", 0);
         rxLocation = new RxLocation(this);
         locationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -97,11 +103,13 @@ public class LocationTrackerService extends Service {
                 .flatMap(location -> rxLocation.geocoding().fromLocation(location).toObservable())
                 .subscribe(address -> {
                     Log.e("Location", address.getAdminArea() + " " + address.getLatitude());
-                    myRef.child(unique_id).setValue(new Data("Abid",
-                                    unique_id,
-                                    address.getLatitude(),
-                                    address.getLongitude(),
-                                    System.currentTimeMillis()));
+                    myRef.child(unique_id).setValue(new Data(pref.getString(Constants.USER_NAME, "N/A"),
+                            unique_id,
+                            address.getLatitude(),
+                            address.getLongitude(),
+                            System.currentTimeMillis(),
+                            pref.getString(Constants.USER_ID, "Dummy"),
+                            pref.getBoolean(Constants.ONLINE_STATUS, false)));
                 }, LocationTrackerService::error);
         // Start foreground service.
         startForeground(1, notification);
@@ -115,6 +123,7 @@ public class LocationTrackerService extends Service {
         if (disposable != null) {
             disposable.dispose();
         }
+        myRef.child(unique_id).child(Constants.ONLINE_STATUS).setValue(false);
         // Stop the foreground service.
         stopSelf();
     }

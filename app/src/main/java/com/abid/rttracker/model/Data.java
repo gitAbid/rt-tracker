@@ -6,16 +6,20 @@ public class Data {
     public double latitude;
     public double longitude;
     public long last_updated;
+    public String userId;
+    public boolean online_status;
 
     public Data() {
     }
 
-    public Data(String name, String id, double latitude, double longitude, long last_updated) {
+    public Data(String name, String id, double latitude, double longitude, long last_updated, String userId, boolean onlineStatus) {
         this.name = name;
         this.id = id;
         this.latitude = latitude;
         this.longitude = longitude;
         this.last_updated = last_updated;
+        this.userId = userId;
+        this.online_status = onlineStatus;
     }
 
     public String getName() {
